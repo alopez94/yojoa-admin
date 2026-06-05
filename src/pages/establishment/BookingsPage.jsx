@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { getEstablishmentBookings } from "../../services/BookingsService";
 import { useAuth } from "../../context/AuthContext";
+import { updateDoc, doc } from "firebase/firestore";
+import { db } from '../../config/firebase';
 
 export default function BookingsPage() {
 
@@ -9,7 +11,6 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [bookingsCount, setBookingsCount] = useState(0);
   const { establishmentData } = useAuth();
-
 
   const loadBookings = async () => {
 
@@ -21,8 +22,7 @@ export default function BookingsPage() {
 
       const results = await getEstablishmentBookings(establishmentData?.ownerId);
       setBookings(results);
-      setBookingsCount(results?.length || 0)
-
+      setBookingsCount(results?.length || 0)      
 
     }
     catch (error) {
@@ -33,9 +33,41 @@ export default function BookingsPage() {
     }
   }
 
+  const handleConfirmation = async (bookingid) => {
+    try{
+      const bookingRef = doc(db,'bookings',bookingid);
+      await updateDoc(bookingRef,{
+        status:'confirmed'
+      });
+    }
+    catch(error){
+      console.log("Error confirming reservation: ",error)
+    }
+    finally{
+      loadBookings();
+    }
+
+  }
+
+   const handleCancellation = async (bookingid) => {
+    try{
+      const bookingRef = doc(db,'bookings',bookingid);
+      await updateDoc(bookingRef,{
+        status:'cancelled'
+      });
+    }
+    catch(error){
+      console.log("Error confirming reservation: ",error)
+    }
+    finally{
+      loadBookings();
+    }
+  }
+
+
   useEffect(() => {
     loadBookings();
-  }, [establishmentData?.ownerId])
+  }, [establishmentData?.ownerId,])
 
   return (
     <div className='p-8 m-w-5x1'>
@@ -78,12 +110,14 @@ export default function BookingsPage() {
                 </div>
                 <div>
                   {booking.status === "pending" && (<button
-                  className="border border-3 border-green-800 bg-green-400 rounded-lg text-white p-2 text-sm"
+                  className="text-xs text-green-600 font-medium px-3 py-1.5 rounded-lg hover:bg-50 transition-colors"
+                  onClick={() => handleConfirmation(booking.id)}
                   >
                     Confirmar Reservacion
                   </button>)}
                   {booking.status === "confirmed" && <button
-                  className="border border-3 border-red-800 bg-red-400 rounded-lg text-white p-2 text-sm"
+                  className="text-xs text-red-600 font-medium px-3 py-1.5 rounded-lg hover:bg-50 transition-colors "
+                  onClick={() => handleCancellation(booking.id)}
                   >
                     Rechazar Reservacion
                   </button>}

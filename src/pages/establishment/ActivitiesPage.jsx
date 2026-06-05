@@ -20,6 +20,7 @@ const EMPTY_FORM = {
     currency: 'HNL',
     duration: '',
     maxCapacity: '',
+    maxCapacityPerInterval: '',
     image: '',
 };
 
@@ -80,6 +81,7 @@ export default function ActivitiesPage() {
             price: activity.price,
             currency: activity.currency || 'HNL',
             duration: activity.duration,
+            maxCapacityPerInterval: activity.maxCApacityPerInterval,
             maxCapacity: activity.maxCapacity,
             image: activity.image || '',
         })
@@ -125,6 +127,7 @@ export default function ActivitiesPage() {
             maxCapacity: parseInt(form.maxCapacity),
             image: form.image.trim(),
             establishmentId: establishmentData.id,
+            maxCapacityPerInterval: parseInt(form.maxCapacityPerInterval),
             updatedAt: serverTimestamp(),
         };
 
@@ -287,11 +290,24 @@ export default function ActivitiesPage() {
                         </div>
 
                         <div>
-                            <label className='block text-sm font-medium text-gray-700 mb-1'>Capacidad</label>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>Capacidad Por Ticket</label>
                             <input
                                 name='maxCapacity'
                                 type='number'
                                 value={form.maxCapacity}
+                                onChange={handleChange}
+                                className='w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
+                                placeholder='20'
+                                min='1'
+                            />
+                        </div>
+
+                        <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>Capacidad Por Intervalo</label>
+                            <input
+                                name='maxCapacityPerInterval'
+                                type='number'
+                                value={form.maxCapacityPerInterval}
                                 onChange={handleChange}
                                 className='w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
                                 placeholder='20'

@@ -22,6 +22,8 @@ const CATEGORIES = [
     'Transportation',
 ];
 
+
+
 export default function ProfilePage() {
 
     const { establishmentData } = useAuth();
@@ -38,7 +40,9 @@ export default function ProfilePage() {
         longitude: '',
         phone: '',
         email: '',
-        website: ''
+        website: '',
+        
+
     })
 
     const [hours, setHours] = useState(DAYS.reduce((acc, day) => ({
@@ -60,6 +64,7 @@ export default function ProfilePage() {
             phone: establishmentData.phone || '',
             email: establishmentData.email || '',
             website: establishmentData.website || '',
+            
         });
 
         if (establishmentData.businessHours) {
@@ -118,7 +123,8 @@ export default function ProfilePage() {
                 email: form.email.trim(),
                 website: form.website.trim(),
                 businessHours: hours,
-                updatedAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),  
+                           
             })
 
             setSuccess(true);
@@ -199,6 +205,7 @@ export default function ProfilePage() {
                         <input name="website" value={form.website} onChange={handleChange}
                             className={inputClass} placeholder="www.misitioweb.com" />
                     </Field>
+                    
                 </div>
             </Section>
 

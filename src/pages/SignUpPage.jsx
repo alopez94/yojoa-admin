@@ -17,6 +17,7 @@ export default function SingupPage() {
         address: ' ',
         category: ' ',
         description: ' ',
+        
     });
 
     const [error, setError] = useState(null);
@@ -85,7 +86,7 @@ export default function SingupPage() {
                 businessHours: {
                     monday: { open: '8:00', close: '17:00', closed: false },
                     tuesday: { open: '8:00', close: '17:00', closed: false },
-                    webnesday: { open: '8:00', close: '17:00', closed: false },
+                    wednesday: { open: '8:00', close: '17:00', closed: false },
                     thursday: { open: '8:00', close: '17:00', closed: false },
                     friday: { open: '8:00', close: '17:00', closed: false },
                     saturday: { open: '8:00', close: '17:00', closed: false },
@@ -96,6 +97,8 @@ export default function SingupPage() {
                 approvedAt: null,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
+                
+
             });
 
         }
@@ -208,6 +211,8 @@ export default function SingupPage() {
                                     ))}
                                 </select>
                             </div>
+
+                             
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Direccion</label>
