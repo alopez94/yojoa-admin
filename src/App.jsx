@@ -4,7 +4,8 @@ import LoginPage from "./pages/LoginPage"
 import SignUpPage from "./pages/SignUpPage"
 import AdminDashboard from './pages/admin/AdminDashboard';
 import EstablishmentDashboard from './pages/establishment/EstablishmentDashboard';
-
+import store from './store'
+import { Provider } from 'react-redux';
 
 const LoadingScreen = () => {
   <div className="min-h-screen flex items-center justify-center">
@@ -92,8 +93,10 @@ const AppRoutes = () => {
 export default function App() {
 
   return (
+    <Provider store={store}>
     <AuthProvider>
       <AppRoutes />
     </AuthProvider>
+    </Provider>
   )
 }
