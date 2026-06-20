@@ -4,6 +4,7 @@ import {
     fetchEstablishments,
     setSearchQuery,
     setSelectedCategory,
+    setSelectedStatus,
     cleanFilters,
     selectFilteredEstablishments,
     selectEstablishmentStatus,
@@ -15,12 +16,12 @@ import { useAuth } from '../../context/AuthContext';
 import { useEffect, useState } from 'react';
 
 const CACHE_DURATION = 5 * 60 * 1000;
-const TABS = ['pending', 'approved', 'rejected'];
+const TABS = ['pending_approval', 'approved', 'rejected','disabled'];
 const STATUS_LABELS = {
     pending_approval: { label: 'Pendiente', color: 'bg-amber-100 text-amber-800' },
     approved: { label: 'Aprobado', color: 'bg-green-100 text-green-800' },
     rejected: { label: 'Rechazado', color: 'bg-red-100 text-red-800' },
-    deactivated: { label: 'Desactivado', color: 'bg-gray-100 text-gray-600' },
+    disabled: { label: 'Desactivado', color: 'bg-gray-100 text-gray-600' },
 };
 
 export default function AdminApprovalPage() {
@@ -33,11 +34,13 @@ export default function AdminApprovalPage() {
     const searchQuery = useSelector(selectSearchQuery);
     const selectCategory = useSelector(selectSelectedCategory);
     const lastFetch = useSelector(selectLastFetch);
-    
+
 
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('Pending');
     const [selected, setSelected] = useState(null);
+    const [feedback, setFeedback] = useState('');
+    const [actionLoading, setActionLoading] = useState(false);
     const isLoading = status === 'loading';
 
     useEffect(() => {
@@ -50,6 +53,27 @@ export default function AdminApprovalPage() {
     const tabCount = (tab) => {
         if (activeTab === tab) return filteredEstablishments.length;
         return null;
+    }
+
+    useEffect(() => {
+        filtereEstablishmentByStatus();
+        
+
+    }, [activeTab])
+
+    const filtereEstablishmentByStatus = () => {
+        
+        
+        try {
+            if (activeTab) {
+                dispatch(setSelectedStatus(activeTab));
+                 
+            }
+        }
+        catch (error) {
+            console.log(error)
+        }
+
     }
 
     return (
@@ -66,7 +90,8 @@ export default function AdminApprovalPage() {
                                     ? 'bg-white text-gray-900 shadow-sm'
                                     : 'text-gray-500 hover:text-gray-700'
                                 }`}>
-                            {tab === 'pending' ? 'Pendientes' : tab === 'approved' ? 'Aprobados' : 'Rechazados'}
+                                   
+                            {tab === 'pending_approval' ? 'Pendientes' : tab === 'approved' ? 'Aprobados' : tab ==='rejected' ?  'Rechazados' : tab === 'disabled' ? 'Deshabilitados' : 'Other'}
                             {activeTab === tab && filteredEstablishments.length > 0 && (
                                 <span className="ml-2 bg-gray text-gray-600 text-xs px-1.5 py-0.5 rounded-full">
                                     {filteredEstablishments.length}
@@ -88,7 +113,7 @@ export default function AdminApprovalPage() {
                         {filteredEstablishments.map(est => (
                             <div
                                 key={est.id}
-                                onClick={() => { setSelected(est), setFeedback(''); }}
+                                onClick={() => { setSelected(est), setFeedback('') }}
                                 className={`bg-white border-rounded-xl p-4 cursor-pointer transition-all ${selected?.id === est.id
                                     ? 'border-blue-500 ring-2 ring-blue-100'
                                     : 'border-gray-200 hover:border-gray-300'
@@ -115,88 +140,107 @@ export default function AdminApprovalPage() {
 
             {/* right panel */}
             <div className="w-80 shrink-0">
-                {
-                    selected ? (
-                        <div className="bg-white border border-gray-200 rounded-xl p-5 sticky top-6">
-                            <div className="flex items-start justify-between mb-4">
-                                <h2 className="font-semibold text-gray-900"> {selected.name} </h2>
-                                <button className="text-gray-400 hover:text-gray-600 text-lg leading-none"
-                                    onClick={() => setSelected(null)}
-                                >x</button>
-                            </div>
+                {selected ? (
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 sticky top-6">
+                        <div className="flex items-start justify-between mb-4">
+                            <h2 className="font-semibold text-gray-900"> {selected.name} </h2>
+                            <button className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+                                onClick={() => setSelected(null)}
+                            >x</button>
+                        </div>
 
-                            {/* details */}
-                            <div className="space-y-3 text-sm mb-5">
-                                <DetailRow label="Categoria" value={selected.category} />
-                                <DetailRow label="Direccion" value={selected.address} />
-                                <DetailRow label="Email" value={selected.email} />
-                                <DetailRow label="Telefono" value={selected.phone} />
-                                <DetailRow label="Descripcion" value={selected.description} />
-                                {selected.website && <DetailRow label="Website" value={selected.website} />}
-                                <DetailRow label="Estado Actual" value={STATUS_LABELS[selected.status]?.label} />
-                                {selected.adminFeedback && (
-                                    <DetailRow label="Feedback Anterior" value={selected.adminFeedback} />
-                                )}
-                            </div>
+                        {/* details */}
+                        <div className="space-y-3 text-sm mb-5">
+                            <DetailRow label="Categoria" value={selected.category} />
+                            <DetailRow label="Direccion" value={selected.address} />
+                            <DetailRow label="Email" value={selected.email} />
+                            <DetailRow label="Telefono" value={selected.phone} />
+                            <DetailRow label="Descripcion" value={selected.description} />
+                            {selected.website && <DetailRow label="Website" value={selected.website} />}
+                            <DetailRow label="Estado Actual" value={STATUS_LABELS[selected.status]?.label} />
+                            {selected.adminFeedback && (
+                                <DetailRow label="Feedback Anterior" value={selected.adminFeedback} />
+                            )}
+                        </div>
 
-                            <div className="mb-4">
-                                <label className="block text-xs font-medium text-gray-500 mb-1">
-                                    Mensaje al establecimiento (opcional)
-                                </label>
-                                <textarea
-                                    value={feedback}
-                                    onChange={e => setFeedback(e.target.value)}
-                                    rows={3}
-                                    placeholder="Pendiente informacion de..."
-                                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                />
-                            </div>
+                        <div className="mb-4">
+                            <label className="block text-xs font-medium text-gray-500 mb-1">
+                                Mensaje al establecimiento (opcional)
+                            </label>
+                            <textarea
+                                value={feedback}
+                                onChange={e => setFeedback(e.target.value)}
+                                rows={3}
+                                placeholder="Pendiente informacion de..."
+                                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            />
+                        </div>
 
-                            {/* actions = cambiar el status del establecimiento */}
-                            <div className="flex flex-col gap-2">
-                                {selected.status !== 'approved' && (
-                                    <button
-                                        onClick={() => handleAction(selected.id, 'approved')}
-                                        disabled={actionLoading}
-                                        className="w-full bg-green-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-green-700 disable:opacity-50 transition-colors"
-                                    >
-                                        {actionLoading ? 'Procesando' : 'Aprobar Establecimiento'}
-                                    </button>
-                                )}
+                        {/* actions = cambiar el status del establecimiento */}
+                        <div className="flex flex-col gap-2">
+                            {selected.status === 'pending_approval' && (
+                                <button
+                                    onClick={() => handleAction(selected.id, 'approved')}
+                                    disabled={actionLoading}
+                                    className="w-full bg-green-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-green-700 disable:opacity-50 transition-colors"
+                                >
+                                    {actionLoading ? 'Procesando' : 'Aprobar Establecimiento'}
+                                </button>
+                            )}
 
-                                {selected.status !== 'rejected' && (
-                                    <button
-                                        onClick={() => handleAction(selected.id, 'rejected')}
-                                        disabled={actionLoading}
-                                        className="w-full bg-red-50 text-red-700 text-sm font-medium py-2 rounded-lg hover:bg-red-100 disable:opacity-50 transition-colors border-red-200"
-                                    >
-                                        {actionLoading ? 'Procesando' : 'Rechazar'}
-                                    </button>
-                                )}
+                            {selected.status === 'rejected' && (
+                                <button
+                                    onClick={() => handleAction(selected.id, 'approved')}
+                                    disabled={actionLoading}
+                                    className="w-full bg-green-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-green-700 disable:opacity-50 transition-colors"
+                                >
+                                    {actionLoading ? 'Procesando' : 'Reactivar Establecimiento'}
+                                </button>
+                            )}
 
-                                {selected.status !== 'approved' && (
-                                    <button
-                                        onClick={() => handleAction(selected.id, 'deactivated')}
-                                        disabled={actionLoading}
-                                        className="w-full bg-gray-100 text-gray-600 text-sm font-medium py-2 rounded-lg hover:bg-gray-200 disable:opacity-50 transition-colors"
-                                    >
-                                        {actionLoading ? 'Procesando' : 'Desactivar'}
-                                    </button>
-                                )}
+                            {selected.status === 'disabled' && (
+                                <button
+                                    onClick={() => handleAction(selected.id, 'approved')}
+                                    disabled={actionLoading}
+                                    className="w-full bg-green-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-green-700 disable:opacity-50 transition-colors"
+                                >
+                                    {actionLoading ? 'Procesando' : 'Reactivar Establecimiento'}
+                                </button>
+                            )}
+
+                            {selected.status === 'pending_approval' && (
+                                <button
+                                    onClick={() => handleAction(selected.id, 'rejected')}
+                                    disabled={actionLoading}
+                                    className="w-full bg-red-50 text-red-700 text-sm font-medium py-2 rounded-lg hover:bg-red-100 disable:opacity-50 transition-colors border-red-200"
+                                >
+                                    {actionLoading ? 'Procesando' : 'Rechazar'}
+                                </button>
+                            )}
+
+                            {selected.status === 'approved' && (
+                                <button
+                                    onClick={() => handleAction(selected.id, 'deactivated')}
+                                    disabled={actionLoading}
+                                    className="w-full bg-gray-100 text-gray-600 text-sm font-medium py-2 rounded-lg hover:bg-gray-200 disable:opacity-50 transition-colors"
+                                >
+                                    {actionLoading ? 'Procesando' : 'Desactivar'}
+                                </button>
+                            )}
 
 
-                            </div>
+                        </div>
+
+                    </div>
+                )
+                    : (
+                        <div className="bg-white border border-gray-200 rounded-xl p-5 text-center">
+                            <p className="text-sm text-gray-400">
+                                Selecciona un estavlecimiento para ver los detalles y tomar accion.
+                            </p>
 
                         </div>
                     )
-                        : (
-                            <div className="bg-white border border-gray-200 rounded-xl p-5 text-center">
-                                <p className="text-sm text-gray-400">
-                                    Selecciona un estavlecimiento para ver los detalles y tomar accion.
-                                </p>
-
-                            </div>
-                        )
                 }
 
             </div>

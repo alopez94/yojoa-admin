@@ -12,6 +12,14 @@ const CATEGORIES = [
     'Transportation',
 ];
 
+const CANCELLATIONPOLICIES = [
+    'Refundable-Any-Time',
+    'Non-refundable',
+    'Refundable-24-Hours',
+    'Refundable-48-Hours'
+];
+
+
 const EMPTY_FORM = {
     name: '',
     description: '',
@@ -22,6 +30,8 @@ const EMPTY_FORM = {
     maxCapacity: '',
     maxCapacityPerInterval: '',
     image: '',
+    cancellationPolicy: '',
+    approvedPaymentMethods: []
 };
 
 
@@ -36,6 +46,7 @@ export default function ActivitiesPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [error, setError] = useState(null);
+    const [approvedPaymentMethods, setApprovedPaymentMethods] = useState(null);
 
     const fetchActivities = async () => {
         if (!establishmentData?.id) return;
@@ -47,18 +58,20 @@ export default function ActivitiesPage() {
                 where('establishmentId', '==', establishmentData.id)
             );
             const snap = await getDocs(q);
-            setActivities(snap.docs.map(d => ({ id: d.id, ...d.data()})));
+            setActivities(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+
         }
         catch (error) {
             console.log("Error Fetching activities: ", error.code, error.message);
         }
         finally {
             setIsLoading(false);
-        }        
+        }
     }
 
     useEffect(() => {
         fetchActivities();
+        getEnabledPaymentMethods(establishmentData.paymentMethods);
     }, [establishmentData?.id]);
 
     const handleChange = (e) => {
@@ -70,6 +83,18 @@ export default function ActivitiesPage() {
         setForm(EMPTY_FORM);
         setError(null);
         setShowForm(true);
+    }
+
+    const getEnabledPaymentMethods = (paymentMethods) => {
+
+        if (!paymentMethods) return [];
+        const approvedPaymentMethods = Object.entries(paymentMethods)
+            .filter(([key, value]) => value === true)
+            .map(([key]) => key)
+        console.log(approvedPaymentMethods);
+        setApprovedPaymentMethods(approvedPaymentMethods);
+
+
     }
 
     const openEdit = (activity) => {
@@ -84,10 +109,20 @@ export default function ActivitiesPage() {
             maxCapacityPerInterval: activity.maxCApacityPerInterval,
             maxCapacity: activity.maxCapacity,
             image: activity.image || '',
+            cancellationPolicy: activity.cancellationPolicy,
+            approvedPaymentMethods: activity.approvedPaymentMethods
         })
         setError(null);
         setShowForm(true);
     }
+
+    const handlePaymentMethodToggle = (method) => {
+        const current = form.approvedPaymentMethods || [];
+        const updated = current.includes(method)
+            ? current.filter(m => m !== method)   // remove if already selected
+            : [...current, method];               // add if not selected
+        setForm({ ...form, approvedPaymentMethods: updated });
+    };
 
     const validateForm = () => {
         if (!form.name.trim()) return 'El nombre es requerido';
@@ -129,6 +164,8 @@ export default function ActivitiesPage() {
             establishmentId: establishmentData.id,
             maxCapacityPerInterval: parseInt(form.maxCapacityPerInterval),
             updatedAt: serverTimestamp(),
+            cancellationPolicy: form.cancellationPolicy,
+            approvedPaymentMethods: form.approvedPaymentMethods || []
         };
 
         try {
@@ -244,7 +281,20 @@ export default function ActivitiesPage() {
                             >
                                 <option value="">Selecciona una...</option>
                                 {CATEGORIES.map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                                    <option key={cat} value={cat}>
+                                        {cat === ""}
+                                        {cat}
+                                        {cat}
+                                        {cat}
+                                        {cat}
+                                        {cat}
+    'Food & Dining',
+    'Recreation & Adventure',
+    'Lodging & Accommodation',
+    'Nature & Outdoor',
+    'Cultural & Historical',
+    'Transportation',
+                                        </option>
                                 ))}
                             </select>
                         </div>
@@ -290,6 +340,31 @@ export default function ActivitiesPage() {
                         </div>
 
                         <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>Politica de Cancelación</label>
+                            <select
+                                name='cancellationPolicy'
+                                value={form.cancellationPolicy}
+                                onChange={handleChange}
+                                className='w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
+                            >
+                                <option>Seleccione una politica de Cancelacion:</option>
+                                {CANCELLATIONPOLICIES.map(pol => (
+                                    <option
+                                        key={pol}
+                                        value={pol}
+                                    >
+                                    {pol ==="Refundable-Any-Time" && "Reemplsable sin restriccion"}
+                                    {pol === "Non-refundable" && "No Reembolsable"}
+                                    {pol === "Refundable-24-Hours" && "Reebolsable al cancelar 24 hora antes"}
+                                    {pol === "Refundable-48-Hours" && "Reebolsable al cancelar 48 hora antes"}
+                                        
+                                    </option>
+                                ))}
+
+                            </select>
+                        </div>
+
+                        <div>
                             <label className='block text-sm font-medium text-gray-700 mb-1'>Capacidad Por Ticket</label>
                             <input
                                 name='maxCapacity'
@@ -322,6 +397,37 @@ export default function ActivitiesPage() {
                             <input name="image" value={form.image} onChange={handleChange}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="https://..." />
+                        </div>
+
+                        <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                Métodos de pago aceptados
+                            </label>
+                            <div className='flex flex-col gap-2'>
+                                {approvedPaymentMethods.map(method => (
+                                    <label
+                                        key={method}
+                                        className='flex items-center gap-3 cursor-pointer p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors'
+                                    >
+                                        <input
+                                            type='checkbox'
+                                            checked={form.approvedPaymentMethods?.includes(method) || false}
+                                            onChange={() => handlePaymentMethodToggle(method)}
+                                            className='w-4 h-4 accent-blue-600'
+                                        />
+                                        <span className='text-sm text-gray-900'>
+                                            {method === 'cash' && '💵 Efectivo'}
+                                            {method === 'card' && '💳 Tarjeta'}
+                                            {method === 'transfers' && '🏦 Transferencias'}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+                            {form.approvedPaymentMethods?.length === 0 && (
+                                <p className='text-xs text-red-500 mt-1'>
+                                    Selecciona al menos un método de pago
+                                </p>
+                            )}
                         </div>
                     </div>
 

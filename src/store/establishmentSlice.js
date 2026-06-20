@@ -24,6 +24,7 @@ const establishmentSlice = createSlice({
         status: 'idle',
         error: null,
         lastFetch: null,
+        establishmentStatus: 'pending'
     },
     reducers: {
         setSearchQuery: (state, action) => {
@@ -46,7 +47,16 @@ const establishmentSlice = createSlice({
             state.searchQuery = '';
             state.selectedCategory = null;
             state.filteredList = state.list;
+        },
+        setSelectedStatus: (state,action) => {
+            
+            state.establishmentStatus = action.payload;
+            state.filteredList = establishmentStatusFilter(
+                state.list,
+                action.payload
+            )
         }
+        
     },
     extraReducers: (builder) => {
         builder
@@ -90,9 +100,22 @@ const applyFilters = (list, searchQuery, selectedCategory) => {
     return filtered;
 }
 
+const establishmentStatusFilter = (list, selectedStatus) => {
+    let filtered = list;
+
+    if(selectedStatus) {
+        filtered = filtered.filter(est => 
+            est.status === selectedStatus
+        )
+    }
+
+    return filtered;
+}
+
 export const {
     setSearchQuery,
     setSelectedCategory,
+    setSelectedStatus,
     cleanFilters
 } = establishmentSlice.actions;
 
