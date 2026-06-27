@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, act } from 'react';
 import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
+
+
 
 const CATEGORIES = [
     'Food & Dining',
@@ -32,9 +34,28 @@ const EMPTY_FORM = {
     image: '',
     cancellationPolicy: '',
     approvedPaymentMethods: [],
-    isDeleted: ''
+    isDeleted: '',
+    isActive: ''
+    
 };
 
+function Toggle({ enabled, onChange, label }) {
+    return (
+        <label className="flex items-center gap-3 cursor-pointer">
+            <div
+                onClick={() => onChange(!enabled)}
+                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${enabled ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+            >
+                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${enabled ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+            </div>
+            {label && (
+                <span className="text-sm text-gray-700">{label}</span>
+            )}
+        </label>
+    );
+}
 
 export default function ActivitiesPage() {
 
@@ -48,6 +69,8 @@ export default function ActivitiesPage() {
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [error, setError] = useState(null);
     const [approvedPaymentMethods, setApprovedPaymentMethods] = useState(null);
+    const [isActive, setIsActive] = useState(false);
+
 
     const fetchActivities = async () => {
         if (!establishmentData?.id) return;
@@ -67,12 +90,14 @@ export default function ActivitiesPage() {
         }
         finally {
             setIsLoading(false);
+            
         }
     }
 
     useEffect(() => {
         fetchActivities();
         getEnabledPaymentMethods(establishmentData.paymentMethods);
+       
     }, [establishmentData?.id]);
 
     const handleChange = (e) => {
@@ -111,7 +136,8 @@ export default function ActivitiesPage() {
             maxCapacity: activity.maxCapacity,
             image: activity.image || '',
             cancellationPolicy: activity.cancellationPolicy,
-            approvedPaymentMethods: activity.approvedPaymentMethods
+            approvedPaymentMethods: activity.approvedPaymentMethods,
+            isActive: activity.isActive
         })
         setError(null);
         setShowForm(true);
@@ -167,7 +193,8 @@ export default function ActivitiesPage() {
             updatedAt: serverTimestamp(),
             cancellationPolicy: form.cancellationPolicy,
             approvedPaymentMethods: form.approvedPaymentMethods || [],
-            isDeleted: false
+            isDeleted: false,
+            isActive: form.isActive
         };
 
         try {
@@ -435,6 +462,19 @@ export default function ActivitiesPage() {
                                 )
                             }
                         </div>
+
+                        <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>Estado de Actividad</label>
+                            <select
+                                name='isActive'
+                                value={form.isActive}
+                                onChange={handleChange}
+                                className='w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
+                            >
+                                <option value="true">Activada</option>
+                                <option value="false">Desactivada</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div className='flex gap-3 mt-6'>
@@ -484,6 +524,7 @@ export default function ActivitiesPage() {
                                 )}
                                 <div className="min-w-0">
                                     <p className="font-medium text-gray-900">{activity.name}</p>
+                                    {activity.isActive === false && <p className="font-medium text-red-200">Deshabilitada</p>}
                                     <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{activity.description}</p>
                                     <div className="flex flex-wrap gap-3 mt-2">
                                         <span className="text-xs text-gray-400">{activity.category}</span>
@@ -500,6 +541,7 @@ export default function ActivitiesPage() {
                             {/* actions */}
 
                             <div className='flex gap-2 shrink-0'>
+
                                 <button className='text-xs text-blue-600 font-medium px-3 py-1.5 rounded-lg hover:bg-50 transition-colors'
                                     onClick={() => openEdit(activity)}
                                 >
@@ -519,6 +561,7 @@ export default function ActivitiesPage() {
                                                 className="text-xs text-gray-500 px-2 py-1 rounded hover:bg-gray-100">
                                                 No
                                             </button>
+
                                         </div>
                                     ) : (
                                         <button onClick={() => setDeleteConfirm(activity.id)}
@@ -527,6 +570,8 @@ export default function ActivitiesPage() {
                                         </button>
                                     )
                                 }
+
+                                
 
                             </div>
 
