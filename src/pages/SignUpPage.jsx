@@ -14,10 +14,14 @@ export default function SingupPage() {
         password: ' ',
         confirmPassword: ' ',
         establishmentName: '',
+        position: '',
+        location: '',
+        status: '',
         address: ' ',
         category: ' ',
         description: ' ',
-        
+        isEmployee: ''
+
     });
 
     const [error, setError] = useState(null);
@@ -60,10 +64,11 @@ export default function SingupPage() {
                 firstName: form.firstName,
                 lastName: form.lastName,
                 phone: form.phone,
+                establishmentId: null,
                 role: 'establishment',
-                profileImage: '',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
+                isDeleted: false,
             });
 
             //create establishment
@@ -97,7 +102,13 @@ export default function SingupPage() {
                 approvedAt: null,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
-                
+                isDeleted: false,
+                paymentMethods: {
+                    card: false,
+                    cash: false,
+                    transfers: false
+                }
+
 
             });
 
@@ -127,7 +138,7 @@ export default function SingupPage() {
                     </div>
                 )}
 
-                
+
 
                 <form onSubmit={handleSignup} className="space-y-5">
 
@@ -212,7 +223,7 @@ export default function SingupPage() {
                                 </select>
                             </div>
 
-                             
+
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Direccion</label>

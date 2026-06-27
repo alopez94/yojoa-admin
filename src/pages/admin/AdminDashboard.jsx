@@ -8,21 +8,13 @@ import AdminApprovalPage from "./AdminApprovalPage";
 import AdminBookingsPage from "./AdminBookingsPage";
 import AdminEstablishmentsPage from "./AdminEstablishmentsPage";
 
+
 const NAV_ITEMS = [
-    { to: '/adminEstablishments', label: 'Administrar Establecimientos', icon: '⛯' },
-    { to: '/reservations', label: 'Reservaciones', icon: '📅' },
-    { to: '/establishments', label: 'Listado de establecimientos', icon: '📍' }
+    { to: '/admin/adminEstablishments', label: 'Administrar Establecimientos', icon: '⛯' },
+    { to: '/admin/reservations', label: 'Reservaciones', icon: '📅' },
+    { to: '/admin/establishments', label: 'Listado de establecimientos', icon: '📍' },
+    
 ]
-
-const TABS = ['pending', 'approved', 'rejected'];
-
-const STATUS_LABELS = {
-    pending_approval: { label: 'Pendiente', color: 'bg-amber-100 text-amber-800' },
-    approved: { label: 'Aprobado', color: 'bg-green-100 text-green-800' },
-    rejected: { label: 'Rechazado', color: 'bg-red-100 text-red-800' },
-    deactivated: { label: 'Desactivado', color: 'bg-gray-100 text-gray-600' },
-};
-
 
 
 export default function AdminDashboard() {
@@ -64,29 +56,7 @@ export default function AdminDashboard() {
         fetchEstablishments(activeTab)
     }, [activeTab])
 
-    const handleAction = async (estId, newStatus) => {
-        setActionLoading(true);
-        try {
-            await updateDoc(doc(db, 'establishments', estId), {
-
-                status: newStatus,
-                ApprovedAt: newStatus === 'approved' ? serverTimestamp() : null,
-                updatedAt: serverTimestamp(),
-                adminFeedback: feedback || null,
-            });
-
-            setFeedback('');
-            setSelected(null);
-            fetchEstablishments(activeTab);
-
-        }
-        catch (error) {
-            console.log('Error changing establishment status: ', error);
-        }
-        finally {
-            setActionLoading(false);
-        }
-    }
+    
 
     const handleSignOut = () => signOut(auth);
 
@@ -145,11 +115,13 @@ export default function AdminDashboard() {
                 </aside>
 
                 <main className="flex-1 overflow-y-auto">
+
                     <Routes>
-                        <Route index element={<Navigate to='adminEstablishments' replace />} />
+                        <Route index element={<Navigate to="/admin/adminEstablishments" replace />} />
                         <Route path="adminEstablishments" element={<AdminApprovalPage />} />
                         <Route path="reservations" element={<AdminBookingsPage />} />
                         <Route path="establishments" element={<AdminEstablishmentsPage />} />
+                       
                     </Routes>
                 </main>
               

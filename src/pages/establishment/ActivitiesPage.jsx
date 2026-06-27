@@ -31,7 +31,8 @@ const EMPTY_FORM = {
     maxCapacityPerInterval: '',
     image: '',
     cancellationPolicy: '',
-    approvedPaymentMethods: []
+    approvedPaymentMethods: [],
+    isDeleted: ''
 };
 
 
@@ -165,7 +166,8 @@ export default function ActivitiesPage() {
             maxCapacityPerInterval: parseInt(form.maxCapacityPerInterval),
             updatedAt: serverTimestamp(),
             cancellationPolicy: form.cancellationPolicy,
-            approvedPaymentMethods: form.approvedPaymentMethods || []
+            approvedPaymentMethods: form.approvedPaymentMethods || [],
+            isDeleted: false
         };
 
         try {
@@ -281,20 +283,17 @@ export default function ActivitiesPage() {
                             >
                                 <option value="">Selecciona una...</option>
                                 {CATEGORIES.map(cat => (
-                                    <option key={cat} value={cat}>
-                                        {cat === ""}
-                                        {cat}
-                                        {cat}
-                                        {cat}
-                                        {cat}
-                                        {cat}
-    'Food & Dining',
-    'Recreation & Adventure',
-    'Lodging & Accommodation',
-    'Nature & Outdoor',
-    'Cultural & Historical',
-    'Transportation',
-                                        </option>
+                                    <option
+                                        key={cat}
+                                        value={cat}
+                                    >
+                                        {cat === "Food & Dining" && "Comida y Servicios Relacionados"}
+                                        {cat === "Recreation & Adventure" && "Recreacion y Aventura"}
+                                        {cat === "Lodging & Accommodation" && "Hospedaje y Acomodaciones"}
+                                        {cat === "Nature & Outdoor" && "Naturaleza y Act. Aire Libre"}
+                                        {cat === "Cultural & Historical" && "Cultura e Historia"}
+                                        {cat === "Transportation" && "Transporte"}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -353,11 +352,11 @@ export default function ActivitiesPage() {
                                         key={pol}
                                         value={pol}
                                     >
-                                    {pol ==="Refundable-Any-Time" && "Reemplsable sin restriccion"}
-                                    {pol === "Non-refundable" && "No Reembolsable"}
-                                    {pol === "Refundable-24-Hours" && "Reebolsable al cancelar 24 hora antes"}
-                                    {pol === "Refundable-48-Hours" && "Reebolsable al cancelar 48 hora antes"}
-                                        
+                                        {pol === "Refundable-Any-Time" && "Reemplsable sin restriccion"}
+                                        {pol === "Non-refundable" && "No Reembolsable"}
+                                        {pol === "Refundable-24-Hours" && "Reebolsable al cancelar 24 hora antes"}
+                                        {pol === "Refundable-48-Hours" && "Reebolsable al cancelar 48 hora antes"}
+
                                     </option>
                                 ))}
 
@@ -404,7 +403,8 @@ export default function ActivitiesPage() {
                                 Métodos de pago aceptados
                             </label>
                             <div className='flex flex-col gap-2'>
-                                {approvedPaymentMethods.map(method => (
+
+                                {approvedPaymentMethods && approvedPaymentMethods.map(method => (
                                     <label
                                         key={method}
                                         className='flex items-center gap-3 cursor-pointer p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors'
@@ -423,11 +423,17 @@ export default function ActivitiesPage() {
                                     </label>
                                 ))}
                             </div>
-                            {form.approvedPaymentMethods?.length === 0 && (
+                            {approvedPaymentMethods && form.approvedPaymentMethods?.length === 0 ? (
                                 <p className='text-xs text-red-500 mt-1'>
                                     Selecciona al menos un método de pago
                                 </p>
-                            )}
+                            )
+                                : !approvedPaymentMethods && (
+                                    <p className='text-xs text-red-500 mt-1'>
+                                        No hay metodos de pago habilitados para su establecimiento.
+                                    </p>
+                                )
+                            }
                         </div>
                     </div>
 

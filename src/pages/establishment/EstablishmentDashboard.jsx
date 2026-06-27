@@ -6,12 +6,14 @@ import ProfilePage from './ProfilePage';
 import ActivitiesPage from './ActivitiesPage';
 import BookingsPage from './BookingsPage';
 import PhotosPage from './PhotosPage';
+import UsersPage from './Users';
 
 const NAV_ITEMS = [
   { to: '/dashboard/profile', label: 'Mi Perfil', icon: '🏢' },
   { to: '/dashboard/activities', label: 'Actividades', icon: '🎯' },
   { to: '/dashboard/bookings', label: 'Reservaciones', icon: '📅' },
   { to: '/dashboard/photos', label: 'Fotos', icon: '📷' },
+  { to: '/dashboard/users', label: 'Usuarios', icon: '👥' }
 ]
 
 export default function EstablishmentDashboard() {
@@ -76,6 +78,7 @@ export default function EstablishmentDashboard() {
           <Route path="activities" element={<ActivitiesPage />} />
           <Route path="bookings" element={<BookingsPage />} />
           <Route path="photos" element={<PhotosPage />} />
+          <Route path="users" element={<UsersPage />} />
         </Routes>
 
       </main>

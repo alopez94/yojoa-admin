@@ -34,8 +34,8 @@ const AdminRoute = ({ children }) => {
 const EstablishmentRoute = ({ children }) => {
   const { user, isLoading, accessError } = useAuth();
 
-  if(isLoading) return <LoadingScreen />
-  if(!user) return <Navigate to="/login"/>
+  if (isLoading) return <LoadingScreen />
+  if (!user) return <Navigate to="/login" />
 
   if (accessError === 'not_establishment') return (
 
@@ -64,25 +64,25 @@ const EstablishmentRoute = ({ children }) => {
 }
 
 const AppRoutes = () => {
-  const { user, isLoading, isAdmin, userData, accessError} = useAuth();
+  const { user, isLoading, isAdmin, userData, accessError } = useAuth();
 
   if (isLoading) return <LoadingScreen />
 
   //redirect to Login
 
- const home = !user ? '/login' : isAdmin ? '/admin' : '/dashboard';
+  const home = !user ? '/login' : isAdmin ? '/admin' : '/dashboard';
 
   return (
     <Routes>
 
       <Route path="/login" element={!user ? <LoginPage /> : <Navigate to={home} replace />} />
       <Route path="/signup" element={!user ? <SignUpPage /> : <Navigate to={home} replace />} />
-        {/* admin route */}
-      <Route path="/admin/*" element={<AdminRoute> <AdminDashboard /> </AdminRoute>}/>
-        {/* establishment route */}
-      <Route path="/dashboard/*" element={ <EstablishmentRoute> <EstablishmentDashboard /> </EstablishmentRoute>} />
+      {/* admin route */}
+      <Route path="/admin/*" element={<AdminRoute> <AdminDashboard /> </AdminRoute>} />
+      {/* establishment route */}
+      <Route path="/dashboard/*" element={<EstablishmentRoute> <EstablishmentDashboard /> </EstablishmentRoute>} />
 
-      
+
       <Route path="*" element={<Navigate to={home} replace />} />
 
     </Routes>
@@ -94,9 +94,9 @@ export default function App() {
 
   return (
     <Provider store={store}>
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </Provider>
   )
 }

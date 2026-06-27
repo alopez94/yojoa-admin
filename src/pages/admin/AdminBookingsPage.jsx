@@ -4,7 +4,7 @@ export default function AdminBookingsPage() {
 
     return (
         <div>
-            <label>Test AdminEstablishmentsPage</label>
+            <label>Test Bookings</label>
         </div>
     )
 }

@@ -14,6 +14,8 @@ import {
 } from '../../store/establishmentSlice'
 import { useAuth } from '../../context/AuthContext';
 import { useEffect, useState } from 'react';
+import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { auth, db } from "../../config/firebase";
 
 const CACHE_DURATION = 5 * 60 * 1000;
 const TABS = ['pending_approval', 'approved', 'rejected','disabled'];
@@ -67,6 +69,7 @@ export default function AdminApprovalPage() {
         try {
             if (activeTab) {
                 dispatch(setSelectedStatus(activeTab));
+                setSelected(null);
                  
             }
         }
@@ -76,8 +79,32 @@ export default function AdminApprovalPage() {
 
     }
 
+    const handleAction = async (estId, newStatus) => {
+            setActionLoading(true);
+            try {
+                await updateDoc(doc(db, 'establishments', estId), {
+    
+                    status: newStatus,
+                    ApprovedAt: newStatus === 'approved' ? serverTimestamp() : null,
+                    updatedAt: serverTimestamp(),
+                    adminFeedback: feedback || null,
+                });
+    
+                setFeedback('');
+                setSelected(null);
+                dispatch(fetchEstablishments());
+    
+            }
+            catch (error) {
+                console.log('Error changing establishment status: ', error);
+            }
+            finally {
+                setActionLoading(false);
+            }
+        }
+
     return (
-        <div className='p-8 m-w-5x1'>
+        <div className='p-8 m-w-5x1 flex gap-1 row'>
             <div >
 
                 <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
@@ -132,8 +159,14 @@ export default function AdminApprovalPage() {
                                     </div>
                                 </div>
 
+                                
+
                             </div>
                         ))}
+
+                        
+
+
                     </div>
                 )}
             </div>
@@ -220,7 +253,7 @@ export default function AdminApprovalPage() {
 
                             {selected.status === 'approved' && (
                                 <button
-                                    onClick={() => handleAction(selected.id, 'deactivated')}
+                                    onClick={() => handleAction(selected.id, 'disabled')}
                                     disabled={actionLoading}
                                     className="w-full bg-gray-100 text-gray-600 text-sm font-medium py-2 rounded-lg hover:bg-gray-200 disable:opacity-50 transition-colors"
                                 >
@@ -236,7 +269,7 @@ export default function AdminApprovalPage() {
                     : (
                         <div className="bg-white border border-gray-200 rounded-xl p-5 text-center">
                             <p className="text-sm text-gray-400">
-                                Selecciona un estavlecimiento para ver los detalles y tomar accion.
+                                Selecciona un establecimiento para ver los detalles y tomar accion.
                             </p>
 
                         </div>

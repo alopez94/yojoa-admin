@@ -15,7 +15,7 @@ export const fetchEstablishments = createAsyncThunk(
 );
 
 const establishmentSlice = createSlice({
-    name: 'establishment',
+    name: 'establishments',
     initialState: {
         list: [],
         filteredList: [],
@@ -31,8 +31,8 @@ const establishmentSlice = createSlice({
             state.searchQuery = action.payload;
             state.filteredList = applyFilters(
                 state.list,
-                state.searchQuery,
-                action.payload
+                action.payload,
+                state.selectedCategory,
             );
         },
         setSelectedCategory: (state, action) => {
