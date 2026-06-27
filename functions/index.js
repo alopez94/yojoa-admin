@@ -3,9 +3,9 @@ const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/
 const admin = require('firebase-admin');
 const { Resend } = require('resend');
 
-//const { bookingConfirmation } = require('./emails/BookingConfirmation');
-//const { newBookingNotification } = require('./emails/NewBookingNotification');
-//const { establishmentStatus } = require('./emails/EstablishmentStatus');
+const { bookingConfirmation } = require('./emails/BookingConfirmation');
+const { newBookingNotification } = require('./emails/NewBookingNotification');
+const { establishmentStatus } = require('./emails/EstablishmentStatus');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -22,7 +22,7 @@ const functionConfig = {
 // ─────────────────────────────────────────
 // TRIGGER: New booking created
 // ─────────────────────────────────────────
-/* 
+
 exports.onBookingCreated = onDocumentCreated(
   { document: 'bookings/{bookingId}', ...functionConfig },
   async (event) => {
@@ -119,7 +119,7 @@ exports.onEstablishmentStatusChanged = onDocumentUpdated(
     return null;
   }
 );
-*/
+
 // ─────────────────────────────────────────
 // HTTP CALLABLE: Create employee account
 // ─────────────────────────────────────────

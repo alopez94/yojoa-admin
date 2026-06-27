@@ -36,7 +36,7 @@ const EMPTY_FORM = {
     approvedPaymentMethods: [],
     isDeleted: '',
     isActive: ''
-    
+
 };
 
 function Toggle({ enabled, onChange, label }) {
@@ -90,14 +90,14 @@ export default function ActivitiesPage() {
         }
         finally {
             setIsLoading(false);
-            
+
         }
     }
 
     useEffect(() => {
         fetchActivities();
         getEnabledPaymentMethods(establishmentData.paymentMethods);
-       
+
     }, [establishmentData?.id]);
 
     const handleChange = (e) => {
@@ -125,6 +125,7 @@ export default function ActivitiesPage() {
 
     const openEdit = (activity) => {
         setEditingActivity(activity);
+
         setForm({
             name: activity.name,
             description: activity.description,
@@ -137,8 +138,10 @@ export default function ActivitiesPage() {
             image: activity.image || '',
             cancellationPolicy: activity.cancellationPolicy,
             approvedPaymentMethods: activity.approvedPaymentMethods,
+            isDeleted: false,
             isActive: activity.isActive
         })
+        console.log(form);
         setError(null);
         setShowForm(true);
     }
@@ -464,16 +467,20 @@ export default function ActivitiesPage() {
                         </div>
 
                         <div>
-                            <label className='block text-sm font-medium text-gray-700 mb-1'>Estado de Actividad</label>
-                            <select
-                                name='isActive'
-                                value={form.isActive}
-                                onChange={handleChange}
-                                className='w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
-                            >
-                                <option value="true">Activada</option>
-                                <option value="false">Desactivada</option>
-                            </select>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>Estado de la Actividad</label>
+                            <div className="flex items-center gap-3">
+                                <div
+                                    onClick={() => setForm({ ...form, isActive: !form.isActive })}
+                                    className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors duration-200 ${form.isActive ? 'bg-blue-600' : 'bg-gray-300'
+                                        }`}
+                                >
+                                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${form.isActive ? 'translate-x-5' : 'translate-x-0'
+                                        }`} />
+                                </div>
+                                <span className="text-sm text-gray-600">
+                                    {form.isActive ? 'Activada' : 'Desactivada'}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -524,7 +531,7 @@ export default function ActivitiesPage() {
                                 )}
                                 <div className="min-w-0">
                                     <p className="font-medium text-gray-900">{activity.name}</p>
-                                    {activity.isActive === false && <p className="font-medium text-red-200">Deshabilitada</p>}
+                                    {activity.isActive === false && <p className="font-normal text-xs text-red-400">Deshabilitada</p>}
                                     <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{activity.description}</p>
                                     <div className="flex flex-wrap gap-3 mt-2">
                                         <span className="text-xs text-gray-400">{activity.category}</span>
@@ -571,7 +578,7 @@ export default function ActivitiesPage() {
                                     )
                                 }
 
-                                
+
 
                             </div>
 
