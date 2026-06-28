@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { addDoc, doc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, doc, collection, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { getEstablishmentUsers } from '../../services/EstablishmentService';
 import { httpsCallable } from 'firebase/functions';
@@ -89,7 +89,20 @@ export default function UsersPage() {
         setOpenModal(true);
     }
 
-    const handleDelete = (user) => {
+    const handleDelete = async (userid) => {
+         setIsSaving(true);
+            setError(null);
+          
+
+            try{
+               await deleteDoc(doc(db,'users',userid));
+               setDeleteConfirm(null);
+               fetchUsers();
+
+            }
+            catch(error){
+                console.log("error deleting user: ",error)
+            }
 
     }
 
