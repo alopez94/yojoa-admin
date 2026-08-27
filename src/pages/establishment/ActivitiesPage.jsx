@@ -448,7 +448,7 @@ export default function ActivitiesPage() {
                                         <span className='text-sm text-gray-900'>
                                             {method === 'cash' && '💵 Efectivo'}
                                             {method === 'card' && '💳 Tarjeta'}
-                                            {method === 'transfers' && '🏦 Transferencias'}
+                                            {method === 'transfer' && '🏦 Transferencias'}
                                         </span>
                                     </label>
                                 ))}

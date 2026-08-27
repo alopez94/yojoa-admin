@@ -45,6 +45,8 @@ export default function ProfilePage() {
 
     })
 
+   
+
     const [hours, setHours] = useState(DAYS.reduce((acc, day) => ({
         ...acc,
         [day.key]: { open: '08:00', close: '17:00', closed: false }
@@ -70,6 +72,8 @@ export default function ProfilePage() {
         if (establishmentData.businessHours) {
             setHours(establishmentData.businessHours);
         }
+            
+         
 
     }, [establishmentData])
 

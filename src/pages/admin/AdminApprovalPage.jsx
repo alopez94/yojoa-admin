@@ -18,7 +18,7 @@ import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp, ord
 import { auth, db } from "../../config/firebase";
 
 const CACHE_DURATION = 5 * 60 * 1000;
-const TABS = ['pending_approval', 'approved', 'rejected','disabled'];
+const TABS = ['pending_approval', 'approved', 'rejected', 'disabled'];
 const STATUS_LABELS = {
     pending_approval: { label: 'Pendiente', color: 'bg-amber-100 text-amber-800' },
     approved: { label: 'Aprobado', color: 'bg-green-100 text-green-800' },
@@ -40,6 +40,9 @@ export default function AdminApprovalPage() {
 
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('Pending');
+    const [isloading, setIsLoading] = useState(false);
+    const [updatingPaymentMethod, setUpdatingPaymentMethod] = useState(false);
+    const [paymentMethods, setPaymentMethods] = useState([])
     const [selected, setSelected] = useState(null);
     const [feedback, setFeedback] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
@@ -52,25 +55,34 @@ export default function AdminApprovalPage() {
         }
     }, [])
 
+
+
     const tabCount = (tab) => {
         if (activeTab === tab) return filteredEstablishments.length;
         return null;
     }
 
+    const handlePaymentMethodToggle = (method) => {
+        const current = paymentMethods || [];
+        const updated = current.includes(method)
+            ? current.filter(m => m !== method)   // remove if already selected
+            : [...current, method];               // add if not selected
+        setPaymentMethods(updated);
+    };
+
+
     useEffect(() => {
         filtereEstablishmentByStatus();
-        
-
     }, [activeTab])
 
     const filtereEstablishmentByStatus = () => {
-        
-        
+
+
         try {
             if (activeTab) {
                 dispatch(setSelectedStatus(activeTab));
                 setSelected(null);
-                 
+
             }
         }
         catch (error) {
@@ -79,29 +91,51 @@ export default function AdminApprovalPage() {
 
     }
 
-    const handleAction = async (estId, newStatus) => {
-            setActionLoading(true);
-            try {
-                await updateDoc(doc(db, 'establishments', estId), {
-    
-                    status: newStatus,
-                    ApprovedAt: newStatus === 'approved' ? serverTimestamp() : null,
-                    updatedAt: serverTimestamp(),
-                    adminFeedback: feedback || null,
-                });
-    
-                setFeedback('');
-                setSelected(null);
-                dispatch(fetchEstablishments());
-    
-            }
-            catch (error) {
-                console.log('Error changing establishment status: ', error);
-            }
-            finally {
-                setActionLoading(false);
-            }
+    const handleEnablePaymentMethords = async (establishmentId, methods) => {
+
+        setIsLoading(true);
+        setUpdatingPaymentMethod(true);
+
+
+        try {
+            await updateDoc(doc(db, "establishments", establishmentId), {
+                paymentMethods: methods,
+                updateAt: serverTimestamp()
+            })
+            dispatch(fetchEstablishments());
         }
+        catch (error) {
+            console.log("error updating payment methods: ", error)
+        }
+        finally {
+            setIsLoading(false);
+        }
+
+    }
+
+    const handleAction = async (estId, newStatus) => {
+        setActionLoading(true);
+        try {
+            await updateDoc(doc(db, 'establishments', estId), {
+
+                status: newStatus,
+                ApprovedAt: newStatus === 'approved' ? serverTimestamp() : null,
+                updatedAt: serverTimestamp(),
+                adminFeedback: feedback || null,
+            });
+
+            setFeedback('');
+            setSelected(null);
+            dispatch(fetchEstablishments());
+
+        }
+        catch (error) {
+            console.log('Error changing establishment status: ', error);
+        }
+        finally {
+            setActionLoading(false);
+        }
+    }
 
     return (
         <div className='p-8 m-w-5x1 flex gap-1 row'>
@@ -117,8 +151,8 @@ export default function AdminApprovalPage() {
                                     ? 'bg-white text-gray-900 shadow-sm'
                                     : 'text-gray-500 hover:text-gray-700'
                                 }`}>
-                                   
-                            {tab === 'pending_approval' ? 'Pendientes' : tab === 'approved' ? 'Aprobados' : tab ==='rejected' ?  'Rechazados' : tab === 'disabled' ? 'Deshabilitados' : 'Other'}
+
+                            {tab === 'pending_approval' ? 'Pendientes' : tab === 'approved' ? 'Aprobados' : tab === 'rejected' ? 'Rechazados' : tab === 'disabled' ? 'Deshabilitados' : 'Other'}
                             {activeTab === tab && filteredEstablishments.length > 0 && (
                                 <span className="ml-2 bg-gray text-gray-600 text-xs px-1.5 py-0.5 rounded-full">
                                     {filteredEstablishments.length}
@@ -140,7 +174,11 @@ export default function AdminApprovalPage() {
                         {filteredEstablishments.map(est => (
                             <div
                                 key={est.id}
-                                onClick={() => { setSelected(est), setFeedback('') }}
+                                onClick={() => {
+                                    setSelected(est),
+                                        setFeedback(''),
+                                        setPaymentMethods(est.paymentMethods || { cash: false, card: false, transfer: false });
+                                }}
                                 className={`bg-white border-rounded-xl p-4 cursor-pointer transition-all ${selected?.id === est.id
                                     ? 'border-blue-500 ring-2 ring-blue-100'
                                     : 'border-gray-200 hover:border-gray-300'
@@ -159,12 +197,12 @@ export default function AdminApprovalPage() {
                                     </div>
                                 </div>
 
-                                
+
 
                             </div>
                         ))}
 
-                        
+
 
 
                     </div>
@@ -194,6 +232,40 @@ export default function AdminApprovalPage() {
                             {selected.adminFeedback && (
                                 <DetailRow label="Feedback Anterior" value={selected.adminFeedback} />
                             )}
+
+                        </div>
+                        <div className="mb-4">
+                            <p className="text-xs font-medium text-gray-500 mb-2">Métodos de pago habilitados</p>
+                            <div className="flex flex-col gap-2">
+                                {['cash', 'card', 'transfer'].map(method => (
+                                    <label
+                                        key={method}
+                                        className='flex items-center gap-3 cursor-pointer p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors'
+                                    >
+                                        <input
+                                            type='checkbox'
+                                            checked={paymentMethods[method] || false}
+                                            onChange={() => {
+                                                const updated = { ...paymentMethods, [method]: !paymentMethods[method] };
+                                                setPaymentMethods(updated);
+                                            }}
+                                            className='w-4 h-4 accent-blue-600'
+                                        />
+                                        <span className='text-sm text-gray-900'>
+                                            {method === 'cash' && '💵 Efectivo'}
+                                            {method === 'card' && '💳 Tarjeta'}
+                                            {method === 'transfer' && '🏦 Transferencia'}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => handleEnablePaymentMethords(selected.id, paymentMethods)}
+                                disabled={isloading}
+                                className="w-full mt-3 bg-blue-600 text-white text-sm font-medium py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                            >
+                                {isloading ? 'Guardando...' : 'Guardar métodos de pago'}
+                            </button>
                         </div>
 
                         <div className="mb-4">
@@ -211,6 +283,7 @@ export default function AdminApprovalPage() {
 
                         {/* actions = cambiar el status del establecimiento */}
                         <div className="flex flex-col gap-2">
+
                             {selected.status === 'pending_approval' && (
                                 <button
                                     onClick={() => handleAction(selected.id, 'approved')}
