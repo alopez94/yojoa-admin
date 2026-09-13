@@ -28,14 +28,14 @@ export default function SingupPage() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const categories = [
-        'Comida y Restaurantes',
-        'Recreación y Aventura',
-        'Alojamiento',
-        'Naturaleza y Aire Libre',
-        'Cultura e Historia',
-        'Transporte',
-    ];
+   const categories = [
+    {key: 0, nameEng:'Food & Dining', nameSpa:"Comida y Restaurantes"},
+    {key: 1, nameEng:'Recreation & Adventure', nameSpa:"Recreación y Aventura"},
+    {key: 2, nameEng:'Lodging & Accommodation', nameSpa:"Alojamiento"},
+    {key: 3, nameEng:'Nature & Outdoor', nameSpa:"Naturaleza y Aire Libre"},
+    {key: 4, nameEng:'Cultural & Historical', nameSpa:"Cultura e Historia"},
+    {key: 5, nameEng:'Transportation', nameSpa:"Transporte"},
+];
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value })
@@ -218,7 +218,7 @@ export default function SingupPage() {
                                     placeholder="Lago de Yojoa" required>
                                     <option value=""> Selecciona una categoria </option>
                                     {categories.map((cat) => (
-                                        <option key={cat} value={cat}>{cat}</option>
+                                        <option key={cat.key} value={cat.nameEng}>{cat.nameSpa}</option>
                                     ))}
                                 </select>
                             </div>

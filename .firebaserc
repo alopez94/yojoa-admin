@@ -1,5 +1,28 @@
 {
   "projects": {
-    "default": "yojoatravel-65803"
-  }
+    "default": "483043916139"
+  },
+  "targets": {
+    "your-firebase-project-id": {
+      "hosting": {
+        "yojoa-landing": [
+          "landing"
+        ],
+        "yojoa-business": [
+          "yojoa-business"
+        ]
+      }
+    },
+    "yojoatravel-65803": {
+      "hosting": {
+        "yojoa-landing": [
+          "yojoa-landing"
+        ],
+        "yojoa-business": [
+          "yojoa-business"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

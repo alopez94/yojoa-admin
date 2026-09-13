@@ -2,16 +2,18 @@ import { useState, useEffect, act } from 'react';
 import { collection, query, where, getDocs, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
+import { getDownloadURL, uploadBytesResumable } from 'firebase/storage';
 
 
 
 const CATEGORIES = [
-    'Food & Dining',
-    'Recreation & Adventure',
-    'Lodging & Accommodation',
-    'Nature & Outdoor',
-    'Cultural & Historical',
-    'Transportation',
+    { key: 0, nameEng: 'Food & Dining', nameSpa: "Comida y Restaurantes" },
+    { key: 1, nameEng: 'Recreation & Adventure', nameSpa: "Recreación y Aventura" },
+    { key: 2, nameEng: 'Lodging & Accommodation', nameSpa: "Alojamiento" },
+    { key: 3, nameEng: 'Nature & Outdoor', nameSpa: "Naturaleza y Aire Libre" },
+    { key: 4, nameEng: 'Cultural & Historical', nameSpa: "Cultura e Historia" },
+    { key: 5, nameEng: 'Transportation', nameSpa: "Transporte" },
+
 ];
 
 const CANCELLATIONPOLICIES = [
@@ -60,6 +62,10 @@ function Toggle({ enabled, onChange, label }) {
 export default function ActivitiesPage() {
 
     const { establishmentData } = useAuth();
+    const [activityPhoto, setActivityPhoto] = useState('');
+    const [photos, setPhotos] = useState('');
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [activities, setActivities] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
@@ -70,6 +76,8 @@ export default function ActivitiesPage() {
     const [error, setError] = useState(null);
     const [approvedPaymentMethods, setApprovedPaymentMethods] = useState(null);
     const [isActive, setIsActive] = useState(false);
+    const [success, setSuccess] = useState(null);
+    const fileInputRef = useRef(null);
 
 
     const fetchActivities = async () => {
@@ -102,6 +110,76 @@ export default function ActivitiesPage() {
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    const handleFileSelect = async (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        //file falidations
+
+        if (activityPhoto.length + files.length > 20) {
+            setError('Maximo de 20 fotos permitidas');
+            return
+        }
+
+        for (const file of files) {
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                setError('Solo se permiten los siguientes formatos: JPG, PNG o Webp')
+                return;
+            }
+
+            if (file.size > 0 * 1024 * 1024) {
+                setError('Cada imagen debe ser menor a 5MB')
+            }
+        }
+
+        setError(null);
+        setUploading(true);
+        setUploadProgress(0)
+
+        try{
+
+            const uploadUrls = [];
+
+            for(let i = 0; i < files.length; i++){
+                const file = files[i];
+                const fileName = `${Date.now()}_${file.name.replace(/\s/g,'_')}`;
+                const storageRef = ref(
+                    `establishments/${establishmentData.id}/activities/photos/${fileName}`
+                );
+
+                await new Promise((resolve, reject) => {
+                    const upLoadTask = uploadBytesResumable(storageRef,file);
+                    upLoadTask.on(
+                        'state_changed',
+                        (snapshot) => {
+                            const progress = (( i / files.length) + (snapshot.bytesTransferred / snapshot.totalBytes / files.length)) * 100;
+                            setUploadProgress(Math.round(progress));
+                        },
+                        reject,
+                        async () => {
+                            const url = await getDownloadURL(upLoadTask.snapshot.ref);
+                            uploadUrls.push(url);
+                            resolve();
+                        }
+                    )
+                })
+            }
+
+            const newPhotos = [...photos, ...uploadUrls];
+
+
+        }
+        catch(error){
+            console.log("Error al cargar archivo: ",error)
+        }
+        finally{
+            setUploading(false);
+             setUploadProgress(0);
+
+        }
+
     }
 
     const openCreate = () => {
@@ -313,17 +391,7 @@ export default function ActivitiesPage() {
                             >
                                 <option value="">Selecciona una...</option>
                                 {CATEGORIES.map(cat => (
-                                    <option
-                                        key={cat}
-                                        value={cat}
-                                    >
-                                        {cat === "Food & Dining" && "Comida y Servicios Relacionados"}
-                                        {cat === "Recreation & Adventure" && "Recreacion y Aventura"}
-                                        {cat === "Lodging & Accommodation" && "Hospedaje y Acomodaciones"}
-                                        {cat === "Nature & Outdoor" && "Naturaleza y Act. Aire Libre"}
-                                        {cat === "Cultural & Historical" && "Cultura e Historia"}
-                                        {cat === "Transportation" && "Transporte"}
-                                    </option>
+                                    <option key={cat.key} value={cat.nameEng}>{cat.nameSpa}</option>
                                 ))}
                             </select>
                         </div>
@@ -446,9 +514,9 @@ export default function ActivitiesPage() {
                                             className='w-4 h-4 accent-blue-600'
                                         />
                                         <span className='text-sm text-gray-900'>
-                                            {method === 'cash' && '💵 Efectivo'}
-                                            {method === 'card' && '💳 Tarjeta'}
-                                            {method === 'transfer' && '🏦 Transferencias'}
+                                            {method === 'cash' && 'Efectivo'}
+                                            {method === 'card' && 'Tarjeta'}
+                                            {method === 'transfer' && 'Transferencias'}
                                         </span>
                                     </label>
                                 ))}
