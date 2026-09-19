@@ -22,8 +22,6 @@ const CATEGORIES = [
     'Transportation',
 ];
 
-
-
 export default function ProfilePage() {
 
     const { establishmentData } = useAuth();
@@ -45,7 +43,7 @@ export default function ProfilePage() {
 
     })
 
-   
+
 
     const [hours, setHours] = useState(DAYS.reduce((acc, day) => ({
         ...acc,
@@ -66,14 +64,14 @@ export default function ProfilePage() {
             phone: establishmentData.phone || '',
             email: establishmentData.email || '',
             website: establishmentData.website || '',
-            
+           
         });
 
         if (establishmentData.businessHours) {
             setHours(establishmentData.businessHours);
         }
-            
-         
+
+
 
     }, [establishmentData])
 
@@ -127,8 +125,9 @@ export default function ProfilePage() {
                 email: form.email.trim(),
                 website: form.website.trim(),
                 businessHours: hours,
-                updatedAt: serverTimestamp(),  
-                           
+                updatedAt: serverTimestamp(),
+
+
             })
 
             setSuccess(true);
@@ -209,9 +208,70 @@ export default function ProfilePage() {
                         <input name="website" value={form.website} onChange={handleChange}
                             className={inputClass} placeholder="www.misitioweb.com" />
                     </Field>
-                    
+
                 </div>
             </Section>
+
+            {/** Informacion Bancaria para transferencias */}
+
+            <Section title="Información Bancaria">
+                <div className="grid grid-cols-2 gap-4">
+                    <Field label="Nombre del Banco">
+                        <input name="bankName" value={form.bankName} onChange={handleChange}
+                            className={inputClass}
+                            placeholder='Bac Honduras'
+                        >
+                        </input>
+                    </Field>
+                    <Field label="Nombre en la Cuenta">
+                        <input name="accountHolder" value={form.accountHolder} onChange={handleChange}
+                            className={inputClass}
+                            placeholder='James Hetfield'
+                        >
+                        </input>
+                    </Field>
+                    <Field label="Identidad en la cuenta">
+                        <input name="accountOwnerId" value={form.accountOwnerId} onChange={handleChange}
+                            className={inputClass}
+                            placeholder='####-####-#####'
+                        >
+                        </input>
+                    </Field>
+                    <Field label="Número de Cuenta">
+                        <input name="accountNumber" value={form.accountNumber} onChange={handleChange}
+                            className={inputClass}
+                            placeholder='####-####'
+                        >
+                        </input>
+                    </Field>
+
+                    <Field label="Dólares o Lempiras">
+                        <select name="accountCurrency"
+                            className={inputClass}
+                            onChange={handleChange}
+                            value={form.accountCurrency}>
+                            <option key="Dólares" value="Dólares">Dólares</option>
+                            <option key="Lempiras" value="Lempiras">Lempiras</option>
+                        </select>
+                    </Field>
+
+
+
+                    <Field label="Tipo de Cuenta">
+                        <select name="accountType"
+                            className={inputClass}
+                            onChange={handleChange}
+                            value={form.accountType}>
+                            <option key="Ahorro" value="Ahorro">Ahorro</option>
+                            <option key="Cheques" value="Cheques">Cheques</option>
+                        </select>
+
+                    </Field>
+
+                </div>
+
+            </Section>
+
 
             {/* Location */}
             <Section title="Ubicación">

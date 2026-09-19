@@ -10,7 +10,7 @@ const establishmentStatus = ({
 <body style="background:#f5f5f5;font-family:sans-serif;margin:0;padding:20px">
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden">
     <div style="background:${isApproved ? '#059669' : '#dc2626'};padding:24px">
-      <h1 style="color:#ffffff;margin:0;font-size:24px">🌊 Yojoa Travel</h1>
+      <h1 style="color:#ffffff;margin:0;font-size:24px"> Yojoa Travel</h1>
     </div>
     <div style="padding:32px">
       <h2 style="color:#1a1a1a">

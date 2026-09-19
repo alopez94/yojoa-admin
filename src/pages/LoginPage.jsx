@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { Navigate, replace, Route, useNavigate } from 'react-router-dom';
-import SignUpPage from './SignUpPage';
+import logoAmanecer from '../assets/logoAmanecer.svg'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,7 +16,7 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
     try {
-        
+
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
       setError('Invalid email or password');
@@ -27,10 +27,18 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Yojoa Admin</h1>
-        <p className="text-gray-500 mb-8">Ingresa para administrar tu establecimiento</p>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 w-full max-w-md items-center">
+        <div className="flex items-center gap-2">
+          <img
+            src={logoAmanecer}
+            alt="Yojoa Travel"
+            className="h-10 w-10"
+          />
 
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Portal de Establecimientos</h1>
+        <p className="text-gray-500 mb-8">Ingresa para administrar tu establecimiento</p>
+        
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded mb-6">
             {error}
@@ -68,16 +76,16 @@ export default function LoginPage() {
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-       
-       <div className="mt-6 text-center border-t border-gray-100 pt-6">
-            <p className="text-gray-500 text-sm">¿No tienes cuenta?{' '}</p>
-            <button
-                onClick={() => navigate('/signup')}
-                className="text-blue-600 font-semibold hover:underline"
-            >
-                Registra tu establecimiento
-            </button>
-       </div>
+
+        <div className="mt-6 text-center border-t border-gray-100 pt-6">
+          <p className="text-gray-500 text-sm">¿No tienes cuenta?{' '}</p>
+          <button
+            onClick={() => navigate('/signup')}
+            className="text-blue-600 font-semibold hover:underline"
+          >
+            Registra tu establecimiento
+          </button>
+        </div>
       </div>
     </div>
   );

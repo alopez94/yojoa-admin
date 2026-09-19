@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from "../config/firebase"
+import logoAmanecer from '../assets/logoAmanecer.svg'
 
 export default function SingupPage() {
 
@@ -28,14 +29,14 @@ export default function SingupPage() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-   const categories = [
-    {key: 0, nameEng:'Food & Dining', nameSpa:"Comida y Restaurantes"},
-    {key: 1, nameEng:'Recreation & Adventure', nameSpa:"Recreación y Aventura"},
-    {key: 2, nameEng:'Lodging & Accommodation', nameSpa:"Alojamiento"},
-    {key: 3, nameEng:'Nature & Outdoor', nameSpa:"Naturaleza y Aire Libre"},
-    {key: 4, nameEng:'Cultural & Historical', nameSpa:"Cultura e Historia"},
-    {key: 5, nameEng:'Transportation', nameSpa:"Transporte"},
-];
+    const categories = [
+        { key: 0, nameEng: 'Food & Dining', nameSpa: "Comida y Restaurantes" },
+        { key: 1, nameEng: 'Recreation & Adventure', nameSpa: "Recreación y Aventura" },
+        { key: 2, nameEng: 'Lodging & Accommodation', nameSpa: "Alojamiento" },
+        { key: 3, nameEng: 'Nature & Outdoor', nameSpa: "Naturaleza y Aire Libre" },
+        { key: 4, nameEng: 'Cultural & Historical', nameSpa: "Cultura e Historia" },
+        { key: 5, nameEng: 'Transportation', nameSpa: "Transporte" },
+    ];
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value })
@@ -129,6 +130,14 @@ export default function SingupPage() {
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
             <div className="bg-white rounded-x1 shadow-sm border border-gray-200 p-8 w-full max-w-lg">
+                <div className="flex items-center gap-2">
+                    <img
+                        src={logoAmanecer}
+                        alt="Yojoa Travel"
+                        className="h-10 w-10"
+                    />
+
+                </div>
                 <h1 className="text-2x1 font-bold text-gray-900 mb-2"> Registra tu establecimiento </h1>
                 <p className="text-gray-500 mb-8">Crea tu cuenta para empezar a gestionar tu negocio en YojoaTravel</p>
 
