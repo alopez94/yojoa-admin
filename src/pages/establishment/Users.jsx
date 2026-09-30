@@ -95,7 +95,9 @@ export default function UsersPage() {
           
 
             try{
-               await deleteDoc(doc(db,'users',userid));
+               await updateDoc(doc(db,'users',userid),{
+                isDeleted: true
+               });
                setDeleteConfirm(null);
                fetchUsers();
 

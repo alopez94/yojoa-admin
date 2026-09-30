@@ -12,7 +12,7 @@ const RESEND_API_KEY = defineSecret('RESEND_API_KEY');
 const PAYPAL_CLIENT_ID = defineSecret('PAYPAL_CLIENT_ID');
 const PAYPAL_SECRET = defineSecret('PAYPAL_SECRET');
 
-const USD_EXCHANGE_RATE = 26.8;   
+const USD_EXCHANGE_RATE = 26.8;   //PARA EL FUTURO ALLAN: AGREGA UNA API CHECK PARA TENER UPDATED EXCHANGE RATES, PODRIA SERVIR PARA ALGO
 
 // ── Runtime options spread into every function ──
 const functionConfig = {
@@ -20,6 +20,12 @@ const functionConfig = {
   memory: '256MiB',
   timeoutSeconds: 60,
   secrets: [RESEND_API_KEY, PAYPAL_CLIENT_ID, PAYPAL_SECRET],
+};
+
+const PRICING_CONFIG = {
+  serviceFeePercentage: 0,   // comisión de YojoaTravel, en %
+  taxPercent: 0,             // ISV, en %
+  enabled: false,            // false = el turista paga solo el precio base
 };
 
 const FROM_EMAIL = 'Yojoa Travel <reservas@yojoatravel.com>';
@@ -67,6 +73,7 @@ module.exports = {
   RESEND_API_KEY,
   PAYPAL_CLIENT_ID,
   PAYPAL_SECRET,
+  PRICING_CONFIG,
   functionConfig,
   FROM_EMAIL,
   PAYPAL_BASE,

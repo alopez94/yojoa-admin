@@ -21,12 +21,14 @@ export const getEstablishmentUsers = async (establishmentId) => {
     try {
         const q = query(
             collection(db,'users'),
-                where('establishmentId','==',establishmentId),            
+                where('establishmentId','==',establishmentId), 
+                where('role', '==', 'establishment_employee')        
         );
         
         const snap = await getDocs(q);
-        return snap.docs.map(d=> ({id: d.id, ...d.data()}))
-
+        return snap
+        .docs.map(d=> ({id: d.id, ...d.data()}))
+        .filter(u => u.isDeleted !== true)
     }
 
     catch(error){

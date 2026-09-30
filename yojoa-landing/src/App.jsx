@@ -7,6 +7,7 @@ import Hero from './components/Hero';
 import Features from './components/Features';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import PrivacyPolicy from './components/privacypolicy';
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
       <Features />
       <Contact />
       <Footer />
+      <PrivacyPolicy />
     </div>
   )
 }

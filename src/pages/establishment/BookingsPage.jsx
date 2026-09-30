@@ -7,6 +7,7 @@ import { db } from '../../config/firebase';
 const STATUS_CONFIG = {
   confirmed:   { label: 'Confirmada',  color: 'text-green-700',  bg: 'bg-green-100'  },
   pending:     { label: 'Pendiente',   color: 'text-yellow-700', bg: 'bg-yellow-100' },
+  pending_payment:     { label: 'Pendiente',   color: 'text-yellow-700', bg: 'bg-yellow-100' },
   in_progress: { label: 'En Proceso',  color: 'text-blue-700',   bg: 'bg-blue-100'   },
   completed:   { label: 'Completada',  color: 'text-indigo-700', bg: 'bg-indigo-100' },
   rejected:    { label: 'Rechazada',   color: 'text-red-700',    bg: 'bg-red-100'    },
@@ -17,6 +18,7 @@ const FILTERS = [
   { key: 'all',         label: 'Todas'       },
   { key: 'confirmed',   label: 'Confirmadas' },
   { key: 'pending',     label: 'Pendientes'  },
+  { key: 'pending_payment',     label: 'Pendientes de Pago'  },
   { key: 'in_progress', label: 'En Proceso'  },
   { key: 'completed',   label: 'Completadas' },
   { key: 'cancelled',   label: 'Canceladas'  },

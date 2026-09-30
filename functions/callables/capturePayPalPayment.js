@@ -1,6 +1,7 @@
 // callables/capturePayPalPayment.js
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { buildPaymentId, buildPaymentDoc, paymentRef, PROVIDER } = require('../utils/payment');
 const { db } = require('../config/firebase');
 // FIX: usaba functionConfig, así que las credenciales de PayPal llegaban
 // undefined y la captura fallaba siempre.
@@ -27,19 +28,20 @@ const capturePayPalPayment = onCall({ ...PAYPAL_CONFIG }, async (request) => {
 
   // FIX: idempotencia. Si el cliente reintenta, no se crea una segunda reserva
   // para el mismo pago.
-  const existing = await db
-    .collection('bookings')
-    .where('paypalOrderId', '==', orderId)
-    .limit(1)
-    .get();
+  const paymentId = buildPaymentId({
+    provider: PROVIDER.PAYPAL,
+    providerTransactionId: orderId,
+  });
 
-  if (!existing.empty) {
-    const doc = existing.docs[0];
+  const existingPayment = await paymentRef(paymentId).get();
+  if (existingPayment.exists) {
+    const prev = existingPayment.data();
+    const prevBooking = await db.collection('bookings').doc(prev.bookingId).get();
     return {
       success: true,
-      bookingId: doc.id,
-      confirmationCode: doc.data().confirmationCode,
-      totalPrice: doc.data().totalPrice,
+      bookingId: prev.bookingId,
+      confirmationCode: prevBooking.data()?.confirmationCode,
+      totalPrice: prev.amount,
     };
   }
 
@@ -96,15 +98,40 @@ const capturePayPalPayment = onCall({ ...PAYPAL_CONFIG }, async (request) => {
       paypal: { orderId, capturedAt: new Date().toISOString() },
     });
 
-    const bookingRef = await db.collection('bookings').add({
+    const bookingRef = await db.collection('bookings').add();
+
+    const paymentId = buildPaymentId({
+      provider: PROVIDER.PAYPAL,
+      providerTransactionId: orderId
+    })
+
+    const paymentDoc = buildPaymentDoc({
+      booking: { ...bookingDoc, touristId: request.auth.uid },
+      bookingId: bookingRef.id,
+      amount: pricing.total,
+      currency: activity.currency,
+      breakdown: {
+        basePrise: pricing.basePrice,
+        serviceFee: pricing.serviceFee,
+        tax: pricing.tax,
+      },
+      method: 'paypal',
+      provider: PROVIDER.PAYPAL,
+      providerTransactionId: orderId,
+      recordedBy: null,
+    });
+
+    const batch = db.batch();
+    batch.set(bookingRef, {
       ...bookingDoc,
       pricing: {
         basePrice: pricing.basePrice,
         serviceFee: pricing.serviceFee,
         tax: pricing.tax,
-        total: pricing.total,
       },
     });
+    batch.set(paymentRef(paymentId), paymentDoc);
+    await batch.commit();
 
     return {
       success: true,
@@ -124,7 +151,7 @@ const capturePayPalPayment = onCall({ ...PAYPAL_CONFIG }, async (request) => {
     throw new HttpsError(
       'internal',
       'Tu pago fue procesado pero hubo un error al crear la reserva. Contáctanos con este código: ' +
-        orderId
+      orderId
     );
   }
 });
