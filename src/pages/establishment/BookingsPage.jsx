@@ -3,35 +3,81 @@ import { getEstablishmentBookings } from "../../services/BookingsService";
 import { useAuth } from "../../context/AuthContext";
 import { updateDoc, doc } from "firebase/firestore";
 import { db } from '../../config/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+const functions = getFunctions();
+const confirmPaymentFn = httpsCallable(functions, 'confirmPaymentReceived');
 
 const STATUS_CONFIG = {
-  confirmed:   { label: 'Confirmada',  color: 'text-green-700',  bg: 'bg-green-100'  },
-  pending:     { label: 'Pendiente',   color: 'text-yellow-700', bg: 'bg-yellow-100' },
-  pending_payment:     { label: 'Pendiente',   color: 'text-yellow-700', bg: 'bg-yellow-100' },
-  in_progress: { label: 'En Proceso',  color: 'text-blue-700',   bg: 'bg-blue-100'   },
-  completed:   { label: 'Completada',  color: 'text-indigo-700', bg: 'bg-indigo-100' },
-  rejected:    { label: 'Rechazada',   color: 'text-red-700',    bg: 'bg-red-100'    },
-  cancelled:   { label: 'Cancelada',   color: 'text-red-700',    bg: 'bg-red-50'     },
+  confirmed: { label: 'Confirmada', color: 'text-green-700', bg: 'bg-green-100' },
+  pending: { label: 'Pendiente', color: 'text-yellow-700', bg: 'bg-yellow-100' },
+  pending_payment: { label: 'Pendiente', color: 'text-yellow-700', bg: 'bg-yellow-100' },
+  in_progress: { label: 'En Proceso', color: 'text-blue-700', bg: 'bg-blue-100' },
+  completed: { label: 'Completada', color: 'text-indigo-700', bg: 'bg-indigo-100' },
+  rejected: { label: 'Rechazada', color: 'text-red-700', bg: 'bg-red-100' },
+  cancelled: { label: 'Cancelada', color: 'text-red-700', bg: 'bg-red-50' },
+};
+
+const METHOD_LABEL = {
+  cash: { label: 'Efectivo', bg: 'bg-gray-100', color: 'text-gray-700' },
+  transfer: { label: 'Transferencia', bg: 'bg-gray-100', color: 'text-gray-700' },
+  paypal: { label: 'PayPal', bg: 'bg-blue-50', color: 'text-blue-700' },
+  card: { label: 'PayPal', bg: 'bg-blue-50', color: 'text-blue-700' },
 };
 
 const FILTERS = [
-  { key: 'all',         label: 'Todas'       },
-  { key: 'confirmed',   label: 'Confirmadas' },
-  { key: 'pending',     label: 'Pendientes'  },
-  { key: 'pending_payment',     label: 'Pendientes de Pago'  },
-  { key: 'in_progress', label: 'En Proceso'  },
-  { key: 'completed',   label: 'Completadas' },
-  { key: 'cancelled',   label: 'Canceladas'  },
+  { key: 'all', label: 'Todas' },
+  { key: 'confirmed', label: 'Confirmadas' },
+  { key: 'pending', label: 'Pendientes' },
+  { key: 'pending_payment', label: 'Pendientes de Pago' },
+  { key: 'in_progress', label: 'En Proceso' },
+  { key: 'completed', label: 'Completadas' },
+  { key: 'cancelled', label: 'Canceladas' },
 ];
 
 export default function BookingsPage() {
   const { establishmentData } = useAuth();
 
-  const [isLoading, setIsLoading]       = useState(false);
-  const [bookings, setBookings]         = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookings, setBookings] = useState([]);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
-  const [searchQuery, setSearchQuery]   = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const [paymentModal, setPaymentModal] = useState(null);   // booking completo
+  const [paidAt, setPaidAt] = useState('');
+  const [reference, setReference] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+
+  const handleConfirmPayment = async () => {
+    if (!paymentModal) return;
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await confirmPaymentFn({
+        bookingId: paymentModal.id,
+        // El 'T12:00:00' evita que un input date se corra un día:
+        // new Date('2026-09-30') se interpreta como medianoche UTC,
+        // que en UTC-6 es el 29 a las 18:00.
+        paidAt: paidAt ? `${paidAt}T12:00:00` : null,
+        reference: reference.trim() || null,
+      });
+
+      setPaymentModal(null);
+      setPaidAt('');
+      setReference('');
+      loadBookings();
+    } catch (err) {
+      console.error('Error confirmando pago:', err);
+      setError(err?.message || 'No se pudo confirmar el pago.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   const loadBookings = async () => {
     if (!establishmentData?.id) return;
@@ -111,11 +157,10 @@ export default function BookingsPage() {
           <button
             key={filter.key}
             onClick={() => setActiveFilter(filter.key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-              activeFilter === filter.key
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
-            }`}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${activeFilter === filter.key
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+              }`}
           >
             {filter.label}
             {activeFilter === filter.key && filteredBookings.length > 0 && (
@@ -172,6 +217,14 @@ export default function BookingsPage() {
                     <span className="text-xs text-gray-400">🕐 {booking.time}</span>
                     <span className="text-xs text-gray-400">👥 {booking.guestCount} personas</span>
                     <span className="text-xs text-gray-400">🔑 {booking.confirmationCode}</span>
+                    {!!booking.paymentMethod && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${METHOD_LABEL[booking.paymentMethod]?.bg || 'bg-gray-100'} ${METHOD_LABEL[booking.paymentMethod]?.color || 'text-gray-700'}`}>
+                        {METHOD_LABEL[booking.paymentMethod]?.label || booking.paymentMethod}
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-400">
+                      {booking.paymentStatus === 'paid' ? '✅ Pagada' : '⏳ Sin pagar'}
+                    </span>
                   </div>
                 </div>
 
@@ -206,6 +259,30 @@ export default function BookingsPage() {
                       >
                         ✕ Rechazar
                       </button>
+
+                    </>
+                  )}
+
+                  {booking.status === "pending_payment" && (
+                    <>
+                      <button
+                        className='text-xs text-green-600 font-medium px-3 py-1.5 rounded-lg hover:bg-green-50 transition-colors border border-green-200'
+                        onClick={() => {
+                          setPaymentModal(booking);
+                          setPaidAt(new Date().toISOString().split('T')[0]);
+                          setReference('');
+                          setError(null);
+                        }}
+                      >
+                        Registrar pago
+                      </button>
+                      <button
+                        className='text-xs text-red-600 font-medium px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors border border-red-200'
+                        onClick={() => handleStatusUpdate(booking.id, "cancelled")}
+                      >
+                        ✕ Cancelar
+                      </button>
+
                     </>
                   )}
 
@@ -241,6 +318,78 @@ export default function BookingsPage() {
           })
         )}
       </div>
+
+      {paymentModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Registrar pago</h2>
+            <p className="text-sm text-gray-500 mb-5">
+              {paymentModal.activityName} · {paymentModal.confirmationCode}
+            </p>
+
+            <div className="bg-gray-50 rounded-lg p-3 mb-5 flex justify-between">
+              <span className="text-sm text-gray-500">Monto</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {paymentModal.currency} {paymentModal.totalPrice?.toLocaleString()}
+              </span>
+            </div>
+
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fecha en que se recibió el pago
+            </label>
+            <input
+              type="date"
+              value={paidAt}
+              onChange={e => setPaidAt(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Número de referencia {paymentModal.paymentMethod === 'cash' && (
+                <span className="text-gray-400 font-normal">(opcional)</span>
+              )}
+            </label>
+            <input
+              type="text"
+              value={reference}
+              onChange={e => setReference(e.target.value)}
+              placeholder={paymentModal.paymentMethod === 'transfer'
+                ? 'Número de la transferencia'
+                : 'Número de recibo'}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            {!!error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded mb-4">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            <p className="text-xs text-gray-400 mb-5">
+              Al confirmar, la reserva pasa a confirmada y el turista recibe un correo.
+              Esta acción queda registrada y no se puede deshacer.
+            </p>
+
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setPaymentModal(null)}
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmPayment}
+                disabled={isSubmitting || !paidAt}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Registrando...' : 'Confirmar pago recibido'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

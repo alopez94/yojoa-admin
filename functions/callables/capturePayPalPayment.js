@@ -1,7 +1,7 @@
 // callables/capturePayPalPayment.js
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { buildPaymentId, buildPaymentDoc, paymentRef, PROVIDER } = require('../utils/payment');
+const { buildPaymentId, buildPaymentDoc, paymentRef, PROVIDER } = require('../utils/payments');
 const { db } = require('../config/firebase');
 // FIX: usaba functionConfig, así que las credenciales de PayPal llegaban
 // undefined y la captura fallaba siempre.
@@ -28,7 +28,7 @@ const capturePayPalPayment = onCall({ ...PAYPAL_CONFIG }, async (request) => {
 
   // FIX: idempotencia. Si el cliente reintenta, no se crea una segunda reserva
   // para el mismo pago.
-  const paymentId = buildPaymentId({
+   const paymentId = buildPaymentId({
     provider: PROVIDER.PAYPAL,
     providerTransactionId: orderId,
   });
@@ -130,7 +130,7 @@ const capturePayPalPayment = onCall({ ...PAYPAL_CONFIG }, async (request) => {
         tax: pricing.tax,
       },
     });
-    batch.set(paymentRef(paymentId), paymentDoc);
+    batch.set(paymentRef(paymentId),paymentDoc);
     await batch.commit();
 
     return {
