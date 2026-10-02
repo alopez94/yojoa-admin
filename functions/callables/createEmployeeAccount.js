@@ -47,7 +47,7 @@ const createEmployeeAccount = onCall({ ...FUNCTION_CONFIG }, async (request) => 
   // cliente sea EL SUYO. Sin esto, cualquier establecimiento podía crear
   // empleados en el establecimiento de otro.
   if (request.auth.uid !== establishmentId) {
-    console.log("establecimiento recibido", establishmentId);
+    
     throw new HttpsError(
       'permission-denied',
       'No puedes crear empleados en otro establecimiento'

@@ -13,6 +13,7 @@ const { sendPaymentInstructions } = require('./callables/sendPaymentInstructions
 const { createEmployeeAccount } = require('./callables/createEmployeeAccount');
 const { onEstablishmentStatusChanged } = require('./triggers/onEstablishmentStatusChanged');
 const {confirmPaymentReceived} = require('./callables/confirmPaymentReceived')
+const { checkInBooking } = require('./callables/checkInBooking');
 
 // ── Triggers ──
 exports.onBookingCreated = onBookingCreated;
@@ -26,3 +27,4 @@ exports.sendPaymentInstructions = sendPaymentInstructions;
 exports.createEmployeeAccount = createEmployeeAccount;
 exports.onEstablishmentStatusChanged = onEstablishmentStatusChanged;
 exports.confirmPaymentReceived = confirmPaymentReceived;
+exports.checkInBooking = checkInBooking;

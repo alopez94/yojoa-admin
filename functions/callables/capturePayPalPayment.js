@@ -98,20 +98,16 @@ const capturePayPalPayment = onCall({ ...PAYPAL_CONFIG }, async (request) => {
       paypal: { orderId, capturedAt: new Date().toISOString() },
     });
 
-    const bookingRef = await db.collection('bookings').add();
+    const bookingRef = db.collection('bookings').doc();
 
-    const paymentId = buildPaymentId({
-      provider: PROVIDER.PAYPAL,
-      providerTransactionId: orderId
-    })
-
+    
     const paymentDoc = buildPaymentDoc({
       booking: { ...bookingDoc, touristId: request.auth.uid },
       bookingId: bookingRef.id,
       amount: pricing.total,
       currency: activity.currency,
       breakdown: {
-        basePrise: pricing.basePrice,
+      basePrice: pricing.basePrice,
         serviceFee: pricing.serviceFee,
         tax: pricing.tax,
       },
@@ -121,6 +117,7 @@ const capturePayPalPayment = onCall({ ...PAYPAL_CONFIG }, async (request) => {
       recordedBy: null,
     });
 
+   
     const batch = db.batch();
     batch.set(bookingRef, {
       ...bookingDoc,
@@ -128,11 +125,13 @@ const capturePayPalPayment = onCall({ ...PAYPAL_CONFIG }, async (request) => {
         basePrice: pricing.basePrice,
         serviceFee: pricing.serviceFee,
         tax: pricing.tax,
+        total: pricing.total,
       },
     });
-    batch.set(paymentRef(paymentId),paymentDoc);
+    batch.set(paymentRef(paymentId), paymentDoc);
     await batch.commit();
 
+    
     return {
       success: true,
       bookingId: bookingRef.id,

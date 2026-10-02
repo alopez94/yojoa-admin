@@ -17,7 +17,7 @@ const createPayPalOrder = onCall({ ...PAYPAL_CONFIG }, async (request) => {
   // FIX: antes recibía totalPrice del cliente. Ahora recibe qué se reserva y
   // el servidor calcula cuánto cuesta.
   const { activityId, establishmentId, guestCount, date, time } = request.data;
-  console.log('createPayPalOrder payload:', { totalPrice, currency, activityName });
+  
 
   if (!activityId || !establishmentId || !guestCount || !date || !time) {
     throw new HttpsError('invalid-argument', 'Faltan campos requeridos');

@@ -12,20 +12,34 @@ const RESEND_API_KEY = defineSecret('RESEND_API_KEY');
 const PAYPAL_CLIENT_ID = defineSecret('PAYPAL_CLIENT_ID');
 const PAYPAL_SECRET = defineSecret('PAYPAL_SECRET');
 
+const PAYPAL_BASE_URL =
+  process.env.PAYPAL_ENV === 'live'
+    ? 'https://api-m.paypal.com'
+    : 'https://api-m.sandbox.paypal.com';
+
 const USD_EXCHANGE_RATE = 26.8;   //PARA EL FUTURO ALLAN: AGREGA UNA API CHECK PARA TENER UPDATED EXCHANGE RATES, PODRIA SERVIR PARA ALGO
 
-// ── Runtime options spread into every function ──
-const functionConfig = {
+const FUNCTION_CONFIG = {
   region: 'us-central1',
   memory: '256MiB',
   timeoutSeconds: 60,
+  maxInstances: 10,
+  cors: true,
+  secrets: [RESEND_API_KEY],
+};
+
+const PAYPAL_CONFIG = {
+  ...FUNCTION_CONFIG,
   secrets: [RESEND_API_KEY, PAYPAL_CLIENT_ID, PAYPAL_SECRET],
 };
 
+// ── Runtime options spread into every function ──
+
+
 const PRICING_CONFIG = {
-  serviceFeePercentage: 0,   // comisión de YojoaTravel, en %
-  taxPercent: 0,             // ISV, en %
-  enabled: false,            // false = el turista paga solo el precio base
+  serviceFeePercentage: 0.035,   // comisión de YojoaTravel, en %
+  taxPercent: 0.125,             // ISV, en %
+  enabled: true,            // false = el turista paga solo el precio base
 };
 
 const FROM_EMAIL = 'Yojoa Travel <reservas@yojoatravel.com>';
@@ -73,14 +87,15 @@ module.exports = {
   RESEND_API_KEY,
   PAYPAL_CLIENT_ID,
   PAYPAL_SECRET,
-  PRICING_CONFIG,
-  functionConfig,
+  FUNCTION_CONFIG,
+  PAYPAL_CONFIG,
   FROM_EMAIL,
-  PAYPAL_BASE,
+  PAYPAL_BASE_URL,
+  USD_EXCHANGE_RATE,
+  DASHBOARD_URL,
+  PRICING_CONFIG,
   BOOKING_STATUS,
   PAYMENT_STATUS,
   PAYMENT_METHOD,
   OCCUPYING_STATUSES,
-  DASHBOARD_URL,
-  USD_EXCHANGE_RATE
 };
